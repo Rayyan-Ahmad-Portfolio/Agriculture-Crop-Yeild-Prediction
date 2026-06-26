@@ -1,0 +1,142 @@
+{
+  "name": "Agriculture Yield Prediction model",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "predict-yield",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -80,
+        -16
+      ],
+      "id": "f38a24d7-bcbd-4c8d-8d3c-f1a48b5c6d6d",
+      "name": "Webhook",
+      "webhookId": "a0bd6d5b-9fc7-42ea-9eee-b52468a3fdba"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": " https://waged-predefine-illusive.ngrok-free.dev/predict",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "Area",
+              "value": "Albania"
+            },
+            {
+              "name": "Item",
+              "value": "Maize"
+            },
+            {
+              "name": "Year",
+              "value": "1990"
+            },
+            {
+              "name": "average_rain_fall_mm_per_year",
+              "value": "1485.0"
+            },
+            {
+              "name": "pesticides_tonnes",
+              "value": "121.0"
+            },
+            {
+              "name": "avg_temp",
+              "value": "16.37"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        128,
+        -16
+      ],
+      "id": "582c826c-4136-4c5e-a5c1-c67d53bb94de",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Grab the raw yield from your HTTP Request node output\nconst rawYieldHgHa = $json.hg_ha_yield;\n\n// 2. Metric conversion: 1 Hectogram = 0.0001 Metric Tons\nconst metricTonsPerHectare = rawYieldHgHa * 0.0001;\n\n// 3. Establish market commodity benchmark pricing per Metric Ton ($ USD)\nconst commodityPrices = {\n  \"Maize\": 290.00,\n  \"Potatoes\": 410.00,\n  \"Rice, paddy\": 380.00,\n  \"Wheat\": 310.00,\n  \"Sorghum\": 240.00,\n  \"Soybeans\": 450.00\n};\n\n// 4. Look back to the original Webhook to see what crop item was sent\nconst cropType = $('Webhook').first().json.Item; \nconst pricePerTon = commodityPrices[cropType] || 300.00;\n\n// 5. Compute gross financial revenue projection\nconst revenueUSD = metricTonsPerHectare * pricePerTon;\n\nreturn {\n  status: \"success\",\n  crop_evaluated: cropType,\n  yield_hg_ha: rawYieldHgHa,\n  yield_metric_tons_per_ha: Math.round(metricTonsPerHectare * 100) / 100,\n  estimated_gross_revenue_per_ha_usd: Math.round(revenueUSD * 100) / 100\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        336,
+        -16
+      ],
+      "id": "341d68fb-c6f1-4975-8ccc-bccb2dc9dc20",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        544,
+        -16
+      ],
+      "id": "11289e16-e348-46db-9d19-4c6552e7bdd6",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "342c3cf4-3282-444b-b327-227b23b91917",
+  "meta": {
+    "instanceId": "0f88174b3271d960cf1521e21a2f51a7195d21e191c4e03be24b998e6e16a932"
+  },
+  "nodeGroups": [],
+  "id": "X1FJ79FXlI2EW6Dw",
+  "tags": []
+}

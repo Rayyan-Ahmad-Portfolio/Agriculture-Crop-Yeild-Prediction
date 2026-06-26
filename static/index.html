@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="AgriYield AI — Real-time crop intelligence and economic forecasting powered by Machine Learning." />
+  <title>AgriYield AI • Predictive Harvest Console</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <div class="page">
+    <header class="agri-header">
+      <h1><span class="accent">AgriYield AI</span> • Predictive Harvest Console</h1>
+      <p>Real-time crop intelligence and economic forecasting powered by Machine Learning.</p>
+    </header>
+
+    <form id="forecast-form" novalidate>
+      <h2 class="section-title">Field &amp; Environmental Telemetry</h2>
+
+      <div class="input-grid">
+        <div class="input-card">
+          <div class="field">
+            <label for="crop">Crop Type</label>
+            <select id="crop" name="crop" required></select>
+          </div>
+          <div class="field">
+            <label for="region">Target Region</label>
+            <select id="region" name="region" required></select>
+          </div>
+          <div class="field">
+            <label for="year">Target Production Year</label>
+            <input type="range" id="year" name="year" min="2000" max="2035" value="2026" />
+            <div class="year-display" id="year-display">2026</div>
+          </div>
+        </div>
+
+        <div class="input-card">
+          <div class="field">
+            <label for="rainfall">Annual Rainfall (mm)</label>
+            <input type="number" id="rainfall" name="rainfall" min="0" step="10" value="850" required />
+          </div>
+          <div class="field">
+            <label for="pesticides">Pesticides Used (metric tonnes)</label>
+            <input type="number" id="pesticides" name="pesticides" min="0" step="0.1" value="1.5" required />
+          </div>
+          <div class="field">
+            <label for="avg-temp">Average Temperature (°C)</label>
+            <input type="number" id="avg-temp" name="avg-temp" min="-10" max="50" step="0.5" value="22" required />
+          </div>
+        </div>
+      </div>
+
+      <div class="action-row">
+        <button type="submit" class="btn-compute" id="compute-btn">
+          🚀 COMPUTE HARVEST ANALYSIS
+        </button>
+      </div>
+    </form>
+
+    <div id="error-banner" class="system-error hidden" role="alert"></div>
+
+    <section id="results-section" class="results-section hidden" aria-live="polite">
+      <h2 class="section-title">Yield Analytics &amp; Revenue Estimates</h2>
+      <div class="metrics-grid">
+        <article class="metric-card yield">
+          <div class="label">Projected Yield</div>
+          <div class="value" id="yield-value">—</div>
+          <div class="sub">Metric Tons per Hectare</div>
+          <div class="sub" id="yield-raw"></div>
+        </article>
+        <article class="metric-card revenue">
+          <div class="label">Estimated Gross Revenue</div>
+          <div class="value" id="revenue-value">—</div>
+          <div class="sub">USD per Hectare (market index)</div>
+        </article>
+      </div>
+    </section>
+
+    <p class="footer-note">
+      Served by the AgriYield ML microservice · Open <a href="/docs" style="color: #4ade80;">API docs</a>
+    </p>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

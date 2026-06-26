@@ -1,0 +1,282 @@
+/* AgriYield AI — HTML Harvest Console styles */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --slate-950: #0f1419;
+  --slate-900: #1a2332;
+  --slate-800: #1e293b;
+  --slate-700: #334155;
+  --slate-400: #94a3b8;
+  --slate-200: #e2e8f0;
+  --slate-100: #f1f5f9;
+  --white: #f8fafc;
+  --green: #4ade80;
+  --green-dark: #16a34a;
+  --amber: #fbbf24;
+  --error-bg: rgba(239, 68, 68, 0.12);
+  --error-border: rgba(248, 113, 113, 0.4);
+  --error-text: #fecaca;
+  --max-width: 1200px;
+  --font: "Segoe UI", system-ui, -apple-system, sans-serif;
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font);
+  background: linear-gradient(160deg, var(--slate-950) 0%, var(--slate-900) 45%, #121820 100%);
+  color: var(--white);
+  min-height: 100vh;
+  line-height: 1.5;
+}
+
+.page {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 2rem 1.5rem 3rem;
+}
+
+/* Header */
+.agri-header {
+  text-align: center;
+  padding: 1.5rem 0 2rem;
+  border-bottom: 1px solid rgba(74, 222, 128, 0.15);
+  margin-bottom: 2rem;
+}
+
+.agri-header h1 {
+  font-size: clamp(1.5rem, 4vw, 2.1rem);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.agri-header .accent {
+  color: var(--green);
+}
+
+.agri-header p {
+  color: var(--slate-400);
+  font-size: 1.05rem;
+  margin-top: 0.6rem;
+}
+
+/* Section titles */
+.section-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--slate-200);
+  margin: 1.5rem 0 1rem;
+  letter-spacing: 0.02em;
+}
+
+/* Input grid */
+.input-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.25rem;
+}
+
+@media (max-width: 768px) {
+  .input-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.input-card {
+  background: rgba(30, 41, 59, 0.65);
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-radius: 14px;
+  padding: 1.25rem 1.5rem;
+  backdrop-filter: blur(8px);
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.field label {
+  display: block;
+  color: var(--slate-100);
+  font-weight: 500;
+  font-size: 0.9rem;
+  margin-bottom: 0.4rem;
+}
+
+.field input,
+.field select {
+  width: 100%;
+  background: var(--slate-800);
+  color: var(--white);
+  border: 1px solid var(--slate-700);
+  border-radius: 8px;
+  padding: 0.65rem 0.85rem;
+  font-size: 1rem;
+  font-family: inherit;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.field input:focus,
+.field select:focus {
+  outline: none;
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.15);
+}
+
+.field input[type="range"] {
+  padding: 0;
+  accent-color: var(--green);
+  cursor: pointer;
+}
+
+.year-display {
+  color: var(--green);
+  font-weight: 700;
+  font-size: 1.1rem;
+  margin-top: 0.25rem;
+}
+
+/* Action button */
+.action-row {
+  display: flex;
+  justify-content: center;
+  margin: 2rem 0 1rem;
+}
+
+.btn-compute {
+  background: linear-gradient(135deg, #22c55e 0%, var(--green-dark) 100%);
+  color: var(--slate-950);
+  font-weight: 700;
+  font-size: 1.1rem;
+  letter-spacing: 0.06em;
+  border: none;
+  border-radius: 12px;
+  padding: 0.85rem 2.5rem;
+  cursor: pointer;
+  box-shadow: 0 0 24px rgba(74, 222, 128, 0.35);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  min-width: min(100%, 420px);
+}
+
+.btn-compute:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 0 32px rgba(74, 222, 128, 0.55);
+}
+
+.btn-compute:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+/* Results */
+.results-section {
+  margin-top: 1rem;
+}
+
+.results-section.hidden {
+  display: none;
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.25rem;
+}
+
+@media (max-width: 640px) {
+  .metrics-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.metric-card {
+  border-radius: 16px;
+  padding: 2rem 1.75rem;
+  text-align: center;
+  min-height: 180px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  border: 1px solid transparent;
+}
+
+.metric-card.yield {
+  background: linear-gradient(145deg, rgba(34, 197, 94, 0.18) 0%, rgba(22, 163, 74, 0.08) 100%);
+  border-color: rgba(74, 222, 128, 0.35);
+  box-shadow: 0 8px 32px rgba(34, 197, 94, 0.12);
+}
+
+.metric-card.revenue {
+  background: linear-gradient(145deg, rgba(245, 158, 11, 0.18) 0%, rgba(217, 119, 6, 0.08) 100%);
+  border-color: rgba(251, 191, 36, 0.35);
+  box-shadow: 0 8px 32px rgba(245, 158, 11, 0.12);
+}
+
+.metric-card .label {
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #cbd5e1;
+  margin-bottom: 0.75rem;
+}
+
+.metric-card.yield .value {
+  font-size: clamp(1.8rem, 5vw, 2.4rem);
+  font-weight: 800;
+  color: var(--green);
+  line-height: 1.2;
+}
+
+.metric-card.revenue .value {
+  font-size: clamp(1.8rem, 5vw, 2.4rem);
+  font-weight: 800;
+  color: var(--amber);
+  line-height: 1.2;
+}
+
+.metric-card .sub {
+  font-size: 0.9rem;
+  color: var(--slate-400);
+  margin-top: 0.6rem;
+}
+
+/* Alerts */
+.system-error {
+  background: var(--error-bg);
+  border: 1px solid var(--error-border);
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  color: var(--error-text);
+  text-align: center;
+  font-size: 1rem;
+  margin: 1.5rem 0;
+}
+
+.system-error.hidden {
+  display: none;
+}
+
+.system-error small {
+  display: block;
+  margin-top: 0.5rem;
+  opacity: 0.85;
+  font-size: 0.85rem;
+}
+
+/* Footer note */
+.footer-note {
+  text-align: center;
+  color: var(--slate-400);
+  font-size: 0.85rem;
+  margin-top: 2.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(148, 163, 184, 0.1);
+}

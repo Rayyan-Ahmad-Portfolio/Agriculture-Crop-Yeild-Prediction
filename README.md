@@ -2,14 +2,15 @@
 
 **AgriYield AI** is an Agricultural Technology (AgTech) forecasting system that combines a machine-learning yield model with a farmer-friendly web dashboard. Enter field and environmental conditions, and the system projects crop yield and estimated gross revenue per hectare in real time.
 
-At its core, this repository hosts the **AI Agricultural Yield & Revenue Forecasting Engine** — a trained non-linear regression pipeline and FastAPI microservice that ingests historical environmental and regional telemetry and outputs crop production forecasts. The Streamlit console layers localized economic revenue estimates on top of those predictions.
+At its core, this repository hosts the **AI Agricultural Yield & Revenue Forecasting Engine** — a trained non-linear regression pipeline and FastAPI microservice that ingests historical environmental and regional telemetry and outputs crop production forecasts. The frontends (HTML or Streamlit) layer localized economic revenue estimates on top of those predictions.
 
-The project is split into two cooperating services:
+The project includes three user-facing layers:
 
-| Component | File | Role |
-|-----------|------|------|
-| **ML Microservice** | `api.py` | FastAPI backend that loads the trained model and returns yield predictions |
-| **Harvest Console** | `app.py` | Streamlit dashboard for inputs, styling, and revenue estimates |
+| Component | File / Path | Role |
+|-----------|-------------|------|
+| **ML Microservice** | `api.py` | FastAPI backend — model inference + serves HTML UI |
+| **HTML Console** | `static/` | Vanilla HTML/CSS/JS dashboard (default at `http://127.0.0.1:8000/`) |
+| **Streamlit Console** | `app.py` | Alternative Python dashboard on port 8501 |
 
 ---
 
@@ -26,6 +27,7 @@ The project is split into two cooperating services:
   - [Model Performance & Evaluation](#model-performance--evaluation)
   - [Production Model Artifacts](#production-model-artifacts)
 - [Streamlit App (`app.py`)](#streamlit-app-apppy)
+- [HTML Frontend (`static/`)](#html-frontend-static)
 - [API Reference](#api-reference)
 - [Yield & Revenue Calculations](#yield--revenue-calculations)
 - [Troubleshooting](#troubleshooting)
@@ -38,23 +40,27 @@ The project is split into two cooperating services:
 
 ```mermaid
 flowchart LR
-    subgraph Frontend
-        A[app.py<br/>Streamlit Dashboard]
+    subgraph Frontends
+        H[static/<br/>HTML Dashboard]
+        S[app.py<br/>Streamlit Dashboard]
     end
     subgraph Backend
         B[api.py<br/>FastAPI Service]
         C[dtr.pkl<br/>Decision Tree Model]
         D[preprocessor.pkl<br/>Feature Pipeline]
     end
-    A -->|POST /predict JSON| B
+    H -->|POST /predict| B
+    S -->|POST /predict| B
     B --> C
     B --> D
-    B -->|hg_ha_yield| A
-    A -->|Display yield + revenue cards| U[Farmer / Analyst]
+    B -->|hg_ha_yield| H
+    B -->|hg_ha_yield| S
+    H -->|Yield + revenue cards| U[Farmer / Analyst]
+    S -->|Yield + revenue cards| U
 ```
 
-1. The user enters crop, region, year, rainfall, pesticides, and temperature in the Streamlit app.
-2. The app sends a JSON payload to `http://127.0.0.1:8000/predict`.
+1. The user enters crop, region, year, rainfall, pesticides, and temperature in the **HTML** or **Streamlit** console.
+2. The frontend sends a JSON payload to `http://127.0.0.1:8000/predict`.
 3. The FastAPI service preprocesses the input, runs inference with the pickled model, and returns predicted yield in **hectograms per hectare** (`hg/ha`).
 4. The dashboard converts that value to **metric tons per hectare** and estimates **USD revenue per hectare** using a commodity price index.
 
@@ -64,8 +70,12 @@ flowchart LR
 
 ```
 AI Project/
-├── api.py              # FastAPI ML inference microservice
-├── app.py              # Streamlit predictive harvest console (UI)
+├── api.py              # FastAPI ML inference microservice + static file host
+├── app.py              # Streamlit predictive harvest console (optional UI)
+├── static/             # HTML/CSS/JS harvest console
+│   ├── index.html      # Main dashboard page
+│   ├── styles.css      # Farmer-friendly dark theme
+│   └── app.js          # API client & revenue calculations
 ├── dtr.pkl             # Trained decision tree regressor (required by api.py)
 ├── preprocessor.pkl    # Fitted sklearn ColumnTransformer pipeline (required by api.py)
 ├── ngrok.yml           # Optional ngrok tunnel configuration
@@ -125,19 +135,31 @@ AI Project/
 
 ## Quick Start
 
-Run **both** services in separate terminals. The API must be running before you click **Compute Harvest Analysis** in the dashboard.
+### Option A — HTML dashboard (recommended)
 
-### Terminal 1 — Start the ML backend
+Start the API; the HTML console is served automatically at the root URL.
 
 ```bash
 uvicorn api:app --reload --host 127.0.0.1 --port 8000
 ```
 
-- API base URL: `http://127.0.0.1:8000`
-- Interactive docs (Swagger): `http://127.0.0.1:8000/docs`
-- Health check: visit `http://127.0.0.1:8000/docs` in your browser
+| URL | Purpose |
+|-----|---------|
+| `http://127.0.0.1:8000/` | HTML harvest console |
+| `http://127.0.0.1:8000/docs` | Interactive API docs (Swagger) |
+| `http://127.0.0.1:8000/predict` | ML inference endpoint |
 
-### Terminal 2 — Start the Streamlit dashboard
+### Option B — Streamlit dashboard
+
+Run **both** services in separate terminals. The API must be running before you click **Compute Harvest Analysis**.
+
+#### Terminal 1 — Start the ML backend
+
+```bash
+uvicorn api:app --reload --host 127.0.0.1 --port 8000
+```
+
+#### Terminal 2 — Start the Streamlit dashboard
 
 ```bash
 streamlit run app.py
@@ -388,6 +410,43 @@ To point the UI at a different API host, edit the constant at the top of `app.py
 ```python
 API_URL = "http://127.0.0.1:8000/predict"
 ```
+
+---
+
+## HTML Frontend (`static/`)
+
+### Overview
+
+The **HTML Harvest Console** is a zero-framework frontend built with vanilla HTML, CSS, and JavaScript. It mirrors the Streamlit dashboard's farmer-friendly design — dark slate theme, matrix-green yield cards, amber revenue cards — and talks to the same `/predict` endpoint.
+
+Because `api.py` serves this UI at `/`, you only need **one process** to run both the ML API and the web dashboard.
+
+### Files
+
+| File | Purpose |
+|------|---------|
+| `static/index.html` | Page structure, form inputs, result cards |
+| `static/styles.css` | Custom theme (slate / green / amber palette) |
+| `static/app.js` | Form handling, `fetch()` to `/predict`, yield & revenue math |
+
+### Features
+
+- Same inputs as Streamlit: crop, region, year slider, rainfall, pesticides, temperature
+- Centered **🚀 COMPUTE HARVEST ANALYSIS** button with loading state
+- Side-by-side **Projected Yield** and **Estimated Gross Revenue** cards
+- Connection error banner when the API is unreachable
+- Responsive layout for mobile and wide screens
+- CORS enabled on the API for local development from other ports or tools
+
+### Running standalone (optional)
+
+If you open `index.html` directly from disk (`file://`), browser security may block API calls. Always prefer serving through FastAPI:
+
+```bash
+uvicorn api:app --reload --host 127.0.0.1 --port 8000
+```
+
+Then visit `http://127.0.0.1:8000/`.
 
 ---
 

@@ -1,9 +1,24 @@
 import pickle
+from pathlib import Path
+
 import pandas as pd
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 app = FastAPI(title="AgriYield Cloud MLOps API")
+
+STATIC_DIR = Path(__file__).parent / "static"
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Load your model and preprocessor safely
 try:
@@ -45,3 +60,13 @@ def predict_yield(data: CropInput):
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/")
+def serve_frontend():
+    """Serve the HTML harvest console at the API root."""
+    return FileResponse(STATIC_DIR / "index.html")
+
+
+if STATIC_DIR.is_dir():
+    app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")

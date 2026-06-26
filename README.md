@@ -553,7 +553,69 @@ revenue_usd_per_ha = metric_tons_per_ha × price_usd_per_ton[crop]
 | `Error loading pickle objects` in terminal | Wrong path or corrupt pickles | Place valid model files next to `api.py` |
 | Unknown crop/region errors | Value not in training data | Use crop and region strings from the supported lists |
 | Streamlit not found | Package not installed | `pip install -r requirements.txt` |
-| Port 8000 already in use | Another process on 8000 | Stop the other service or change uvicorn `--port` and update `API_URL` in `app.py` |
+| `InconsistentVersionWarning` (sklearn 1.6.1 vs 1.9.0) | Model pickled with a different sklearn version | `pip install scikit-learn==1.6.1` then restart uvicorn |
+| `[WinError 10013]` on startup | Port 8000 already in use or blocked | See [Port 8000 blocked](#port-8000-blocked) below |
+
+### Port 8000 blocked
+
+`WinError 10013` usually means **another process is already listening on port 8000** (often a previous `uvicorn` you did not stop).
+
+**1. Find what is using the port (PowerShell):**
+
+```powershell
+netstat -ano | findstr ":8000"
+```
+
+The last column is the **PID**. Example: `LISTENING 19968`
+
+**2. Stop that process:**
+
+```powershell
+Stop-Process -Id 19968 -Force
+```
+
+Replace `19968` with your PID.
+
+**3. Start the API again:**
+
+```powershell
+python -m uvicorn api:app --reload --host 127.0.0.1 --port 8000
+```
+
+**Alternative — use a different port:**
+
+```powershell
+python -m uvicorn api:app --reload --host 127.0.0.1 --port 8001
+```
+
+If you use port `8001`, update `API_URL` in `app.py` to `http://127.0.0.1:8001/predict`. The HTML console auto-detects the host when served from the same uvicorn process.
+
+### scikit-learn version mismatch
+
+Your model files (`dtr.pkl`, `preprocessor.pkl`) were saved with **scikit-learn 1.6.1**. Loading them with a newer version (e.g. **1.9.0** on Python 3.14) triggers warnings and can produce wrong predictions.
+
+**Option A — match the training version (recommended):**
+
+Use **Python 3.11 or 3.12**, then:
+
+```powershell
+pip install scikit-learn==1.6.1
+```
+
+**Option B — stay on Python 3.14:**
+
+Keep your current sklearn and **re-save** the model with the same version you run in production:
+
+```python
+import pickle
+# after training with your current sklearn:
+pickle.dump(model, open("dtr.pkl", "wb"))
+pickle.dump(preprocessor, open("preprocessor.pkl", "wb"))
+```
+
+**Option C — ignore warnings for local testing:**
+
+Predictions may still work, but validate outputs before relying on them.
 
 ---
 

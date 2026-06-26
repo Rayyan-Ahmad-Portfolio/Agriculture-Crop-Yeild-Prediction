@@ -21,12 +21,17 @@ app.add_middleware(
 )
 
 # Load your model and preprocessor safely
+model = None
+preprocessor = None
+model_load_error = None
+
 try:
     with open('dtr.pkl', 'rb') as f:
         model = pickle.load(f)
     with open('preprocessor.pkl', 'rb') as f:
         preprocessor = pickle.load(f)
 except Exception as e:
+    model_load_error = str(e)
     print(f"Error loading pickle objects: {e}")
 
 class CropInput(BaseModel):
@@ -37,8 +42,22 @@ class CropInput(BaseModel):
     pesticides_tonnes: float
     avg_temp: float
 
+@app.get("/health")
+def health_check():
+    """Lightweight status check for the HTML dashboard."""
+    return {
+        "status": "ok",
+        "model_loaded": model is not None and preprocessor is not None,
+        "error": model_load_error,
+    }
+
 @app.post("/predict")
 def predict_yield(data: CropInput):
+    if model is None or preprocessor is None:
+        raise HTTPException(
+            status_code=503,
+            detail=model_load_error or "Model files (dtr.pkl, preprocessor.pkl) are not loaded.",
+        )
     try:
         # Reconstruct into a DataFrame to preserve feature names for the encoder/scaler
         df_input = pd.DataFrame([{
@@ -65,7 +84,19 @@ def predict_yield(data: CropInput):
 @app.get("/")
 def serve_frontend():
     """Serve the HTML harvest console at the API root."""
-    return FileResponse(STATIC_DIR / "index.html")
+    return FileResponse(STATIC_DIR / "index.html", media_type="text/html")
+
+
+@app.get("/styles.css", include_in_schema=False)
+def serve_styles():
+    """Serve CSS when the page is loaded from /."""
+    return FileResponse(STATIC_DIR / "styles.css", media_type="text/css")
+
+
+@app.get("/app.js", include_in_schema=False)
+def serve_app_js():
+    """Serve JS when the page is loaded from /."""
+    return FileResponse(STATIC_DIR / "app.js", media_type="application/javascript")
 
 
 if STATIC_DIR.is_dir():
